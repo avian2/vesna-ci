@@ -11,13 +11,14 @@ LOGFILE_HTML="$BASEDIR/build.html"
 
 REPO="git@github.com:sensorlab/vesna-drivers.git"
 
-if [ "$#" -ne 2 ]; then
-	echo "USAGE: $0 remote commit"
+if [ "$#" -lt 2 ]; then
+	echo "USAGE: $0 remote commit [merge-into]"
 	exit 1
 fi
 
 REMOTE="$1"
 COMMIT="$2"
+MERGE_INTO="$3"
 
 if [ ! -d "$BUILDDIR" ]; then
 	echo "**** cloning repository for the first time"
@@ -34,8 +35,21 @@ set -e
 
 $GIT remote add src "$REMOTE"
 $GIT fetch src
+$GIT fetch origin
 
-$GIT checkout "$COMMIT"
+if [ "$MERGE_INTO" ]; then
+	$GIT checkout "$MERGE_INTO"
+
+	set +e
+	$GIT branch -D ci
+	set -e
+
+	$GIT checkout -b ci "$MERGE_INTO"
+	$GIT merge "$COMMIT"
+else
+	$GIT checkout "$COMMIT"
+fi
+
 $GIT clean -xdf
 
 cp $BUILDDIR/Applications/Logatec/Clusters/local_usart_networkconf.h $BUILDDIR/Applications/Logatec/networkconf.h
