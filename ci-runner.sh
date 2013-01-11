@@ -55,6 +55,18 @@ $GIT clean -xdf
 cp $BUILDDIR/Applications/Logatec/Clusters/local_usart_networkconf.h $BUILDDIR/Applications/Logatec/networkconf.h
 (cd $BUILDDIR && make) > "$LOGFILE" 2>&1
 
-RESULT=$?
+RESULT="$?"
+
+if [ "$RESULT" -eq 0 ]; then
+	if egrep -f "$BASEDIR/fail_patterns" "$LOGFILE" > /dev/null; then
+		VERDICT="failed-compile"
+	else
+		VERDICT="ok"
+	fi
+else
+	VERDICT="failed-make"
+fi
 
 CGCC_FORCE_COLOR=1 colorgcc "$LOGFILE" | aha > "$LOGFILE_HTML"
+
+echo "verdict: $VERDICT"
