@@ -61,9 +61,10 @@ if [ -e "$NETWORKCONF_PATH" ]; then
 fi
 
 #echo test > "$LOGFILE"
+set +e
 (cd $BUILDDIR && make) > "$LOGFILE" 2>&1
-
 RESULT="$?"
+set -e
 
 if [ "$RESULT" -eq 0 ]; then
 	if egrep -f "$BASEDIR/fail_patterns" "$LOGFILE" > /dev/null; then
