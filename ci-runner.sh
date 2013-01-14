@@ -8,6 +8,7 @@ BUILDDIR="$BASEDIR/build"
 
 LOGFILE="$BASEDIR/build.log"
 LOGFILE_HTML="$BASEDIR/build.html"
+VERDICTFILE="$BASEDIR/build.verdict"
 
 REPO="git@github.com:sensorlab/vesna-drivers.git"
 
@@ -28,6 +29,8 @@ fi
 GIT="git --git-dir $BUILDDIR/.git --work-tree $BUILDDIR"
 
 echo "**** building in $BUILDDIR"
+
+rm -f "$VERDICTFILE"
 
 set +e
 $GIT remote rm src
@@ -52,7 +55,12 @@ fi
 
 $GIT clean -xdf
 
-cp $BUILDDIR/Applications/Logatec/Clusters/local_usart_networkconf.h $BUILDDIR/Applications/Logatec/networkconf.h
+NETWORKCONF_PATH="$BUILDDIR/Applications/Logatec/Clusters/local_usart_networkconf.h"
+if [ -e "$NETWORKCONF_PATH" ]; then
+	cp "$NETWORKCONF_PATH" $BUILDDIR/Applications/Logatec/networkconf.h
+fi
+
+#echo test > "$LOGFILE"
 (cd $BUILDDIR && make) > "$LOGFILE" 2>&1
 
 RESULT="$?"
@@ -69,4 +77,4 @@ fi
 
 CGCC_FORCE_COLOR=1 colorgcc "$LOGFILE" | aha > "$LOGFILE_HTML"
 
-echo "verdict: $VERDICT"
+echo "$VERDICT" > "$VERDICTFILE"
