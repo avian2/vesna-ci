@@ -45,7 +45,7 @@ if [ "$MERGE_INTO" ]; then
 	set -e
 
 	$GIT checkout -b ci "$MERGE_INTO"
-	$GIT merge "$COMMIT"
+	$GIT merge --no-edit "$COMMIT"
 else
 	$GIT checkout "$COMMIT"
 fi
