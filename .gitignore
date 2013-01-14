@@ -1,5 +1,6 @@
 build
 build.log
 build.html
+build.verdict
 ci-runner.token
 logs
