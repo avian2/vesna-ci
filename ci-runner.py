@@ -13,7 +13,7 @@ def main():
 
 	for pull in repo.get_pulls('open'):
 		#print pull.base.repo.git_url, pull.base.ref
-		#print pull.head.repo.git_url, pull.head.ref
+		print pull.head.repo.git_url, pull.head.ref
 
 		remote = pull.head.repo.clone_url
 		remote = remote.replace("https://github.com/", "git@github.com:")
@@ -29,9 +29,10 @@ def main():
 
 		already_done = any(status.state != 'error' for status in commit.get_statuses())
 		if already_done:
-			#print "Already done"
-			#continue
-			break
+			print "Already done"
+			continue
+			#break
+			#pass
 
 		retcode = subprocess.call(["/bin/bash", "ci-runner.sh", remote, ref])
 		if retcode == 0:
@@ -55,6 +56,5 @@ def main():
 		target_url = "%s/build.%s.html" % (BASE_URL, sha)
 
 		commit.create_status(state, target_url, description)
-		break
 
 main()
