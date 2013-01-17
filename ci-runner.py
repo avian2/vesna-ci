@@ -15,7 +15,7 @@ def run_pullreq(pulln, remote, ref, sha):
 	env['BASE_DIR'] = BASE_DIR
 	env['REPO'] = REPO
 
-	p = subprocess.Popen(["/bin/bash", "ci-runner.sh", remote, ref],
+	p = subprocess.Popen(["/bin/bash", os.path.join(BASE_DIR, "ci-runner.sh"), remote, ref],
 			stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 	pout, perr = p.communicate()
 
@@ -25,13 +25,14 @@ def run_pullreq(pulln, remote, ref, sha):
 		logging.info("%d: ci-runner.sh 2: %s" % (pulln, line))
 
 	if p.returncode == 0:
-		status = open("build.verdict").read().strip()
+		status = open(os.path.join(BASE_DIR, "build.verdict")).read().strip()
 	else:
 		logging.warning("%d: ci-runner.sh exited with %d" % (pulln, p.returncode))
 		status = "failed-ci"
 
 	for e in ["log", "html", "verdict"]:
-		os.rename("build.%s" % (e,), "logs/build.%s.%s" % (sha, e))
+		os.rename(os.path.join(BASE_DIR, "build.%s" % (e,)),
+				os.path.join(BASE_DIR, "logs/build.%s.%s" % (sha, e)))
 
 	if status == 'ok':
 		state = 'success'
@@ -49,7 +50,8 @@ def run():
 	logging.info("BASE_DIR = %s" % (BASE_DIR,))
 	logging.info("Starting run at %s" % (datetime.datetime.now(),))
 
-	token = open("ci-runner.token").read().strip()
+	token_path = os.path.join(BASE_DIR, "ci-runner.token")
+	token = open(token_path).read().strip()
 	gh = Github(token)
 
 	repo = gh.get_repo(REPO)

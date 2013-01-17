@@ -60,7 +60,7 @@ fi
 
 set +e
 #echo test > "$LOGFILE"
-(cd $BUILDDIR && make) > "$LOGFILE" 2>&1
+make -C $BUILDDIR > "$LOGFILE" 2>&1
 RESULT="$?"
 set -e
 
