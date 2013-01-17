@@ -2,15 +2,13 @@
 
 set -e
 
-BASEDIR=`dirname $0`
+BUILDDIR="$BASE_DIR/build"
 
-BUILDDIR="$BASEDIR/build"
+LOGFILE="$BASE_DIR/build.log"
+LOGFILE_HTML="$BASE_DIR/build.html"
+VERDICTFILE="$BASE_DIR/build.verdict"
 
-LOGFILE="$BASEDIR/build.log"
-LOGFILE_HTML="$BASEDIR/build.html"
-VERDICTFILE="$BASEDIR/build.verdict"
-
-REPO="git@github.com:sensorlab/vesna-drivers.git"
+REPO_URL="git@github.com:$REPO.git"
 
 if [ "$#" -lt 2 ]; then
 	echo "USAGE: $0 remote commit [merge-into]"
@@ -23,7 +21,7 @@ MERGE_INTO="$3"
 
 if [ ! -d "$BUILDDIR" ]; then
 	echo "**** cloning repository for the first time"
-	git clone "$REPO" "$BUILDDIR"
+	git clone "$REPO_URL" "$BUILDDIR"
 fi
 
 GIT="git --git-dir $BUILDDIR/.git --work-tree $BUILDDIR"
@@ -60,14 +58,14 @@ if [ -e "$NETWORKCONF_PATH" ]; then
 	cp "$NETWORKCONF_PATH" $BUILDDIR/Applications/Logatec/networkconf.h
 fi
 
-#echo test > "$LOGFILE"
 set +e
+#echo test > "$LOGFILE"
 (cd $BUILDDIR && make) > "$LOGFILE" 2>&1
 RESULT="$?"
 set -e
 
 if [ "$RESULT" -eq 0 ]; then
-	if egrep -f "$BASEDIR/fail_patterns" "$LOGFILE" > /dev/null; then
+	if egrep -f "$BASE_DIR/fail_patterns" "$LOGFILE" > /dev/null; then
 		VERDICT="failed-compile"
 	else
 		VERDICT="ok"
