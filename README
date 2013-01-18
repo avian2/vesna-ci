@@ -15,6 +15,10 @@ Github, which means that response time might be an hour or so. Web hooks
 mechanism for faster responses to new pull requests might be implemented
 in the future.
 
+   WARNING: do not deploy for a public repository where anyone can make a
+   pull request unless you install in an sandbox environment where you can
+   safely let the user running vesna-ci to execute arbitrary code.
+
 
 Requirements
 ============
