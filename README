@@ -38,6 +38,7 @@ Installation
  - Clone vesna-ci git repository into a directory somewhere.
 
  - Put Github OAuth token into "ci-runner.token" file.
+   (https://help.github.com/articles/creating-an-oauth-token-for-command-line-use)
 
  - Make a symbolic link from ~/.colorgccrc to colorgccrc file in vesna-ci
    directory.
