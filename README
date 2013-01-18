@@ -1,0 +1,76 @@
+Introduction
+============
+
+vesna-ci is a script for automated testing (continuous integration) of
+firmware for VESNA (http://sensorlab.ijs.si/hardware.html).
+
+At the moment it only checks whether code from open pull-requests for a
+particular Github repository compiles without errors or warnings. Soon it
+will also be able to check results of unit tests and perhaps do some more
+extensive testing. It communicates with Github users through commit status
+messages, which makes it similar to Travis.
+
+It currently works by periodically polling the pull request queue at
+Github, which means that response time might be an hour or so. Web hooks
+mechanism for faster responses to new pull requests might be implemented
+in the future.
+
+
+Requirements
+============
+
+ - apt-get install git colorgcc aha
+
+ - Properly installed summon-arm-toolchain
+   (https://github.com/avian2/summon-arm-toolchain)
+
+   (See instructions at http://sensorlab.github.com/vesna-manual)
+
+ - Properly installed PyGithub
+   (https://github.com/jacquev6/PyGithub)
+
+ - Web server to serve build logs.
+
+
+Installation
+============
+
+ - Clone vesna-ci git repository into a directory somewhere.
+
+ - Put Github OAuth token into "ci-runner.token" file.
+
+ - Make a symbolic link from ~/.colorgccrc to colorgccrc file in vesna-ci
+   directory.
+
+ - Set up web server so that "vesna-ci/logs" is accessible over HTTP or
+   HTTPS.
+
+ - Check values in settings.py
+
+ - Periodically run "ci-runner.py". For instance, run "crontab -e" and add
+   the following lines:
+
+       PYTHONPATH="/home/.../local/lib/python"
+       13 * * * * python /home/.../vesna-ci/ci-runner.py
+
+
+License
+=======
+
+Copyright (C) 2013 SensorLab, Jozef Stefan Institute
+http://sensorlab.ijs.si
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Author:		Tomaz Solc, <tomaz.solc@ijs.si>
