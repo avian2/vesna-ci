@@ -70,7 +70,7 @@ fi
 
 set +e
 #echo test > "$LOGFILE"
-make -C $BUILDDIR > "$LOGFILE" 2>&1
+make -C "$BUILDDIR" > "$LOGFILE" 2>&1
 RESULT="$?"
 set -e
 
@@ -78,7 +78,19 @@ if [ "$RESULT" -eq 0 ]; then
 	if egrep -f "$BASE_DIR/fail_patterns" "$LOGFILE" > /dev/null; then
 		VERDICT="failed-compile"
 	else
-		VERDICT="ok"
+		if [ -e "$BUILDDIR/test/Makefile" ]; then
+			set +e
+			make -C "$BUILDDIR/test" test >> "$LOGFILE" 2>&1
+			RESULT="$?"
+			set -e
+			if [ "$RESULT" -eq 0 ]; then
+				VERDICT="ok"
+			else
+				VERDICT="failed-tests"
+			fi
+		else
+			VERDICT="ok"
+		fi
 	fi
 else
 	VERDICT="failed-make"
