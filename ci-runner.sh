@@ -2,6 +2,16 @@
 
 set -e
 
+if [ ! "$BASE_DIR" ]; then
+	HERE=`dirname $0`
+	if [ -d "$HERE/build" ]; then
+		BASE_DIR="$HERE"
+	else
+		echo "Please define BASE_DIR environment"
+		exit 1
+	fi
+fi
+
 BUILDDIR="$BASE_DIR/build"
 
 LOGFILE="$BASE_DIR/build.log"
