@@ -6,6 +6,12 @@ import subprocess
 from settings import *
 import os
 
+FAILURE_DESCRIPTIONS = {
+	"failed-compile": "Compiler emitted warnings or non-fatal errors.",
+	"failed-make": "There were fatal compiler errors.",
+	"failed-tests": "Code did not pass unit tests.",
+}
+
 def setup():
 	log_path = os.path.join(BASE_DIR, "logs/ci-runner.log")
 	logging.basicConfig(filename=log_path, level=logging.INFO)
@@ -42,7 +48,7 @@ def run_pullreq(pulln, remote, ref, sha):
 		description = 'CI system failed'
 	else:
 		state = 'failure'
-		description = 'Build failed: %s' % status
+		description = FAILURE_DESCRIPTIONS.get(status ,'Build failed: %s' % status)
 
 	return state, description
 
