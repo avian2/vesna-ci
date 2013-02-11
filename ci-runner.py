@@ -21,7 +21,7 @@ def run_pullreq(pulln, remote, ref, sha):
 	env['BASE_DIR'] = BASE_DIR
 	env['REPO'] = REPO
 
-	p = subprocess.Popen(["/bin/bash", os.path.join(BASE_DIR, "ci-runner.sh"), remote, ref],
+	p = subprocess.Popen(["/bin/bash", os.path.join(BASE_DIR, "ci-runner.sh"), remote, ref, "origin/master"],
 			stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 	pout, perr = p.communicate()
 
