@@ -7,7 +7,7 @@ if [ ! "$BASE_DIR" ]; then
 	if [ -d "$HERE/build" ]; then
 		BASE_DIR="$HERE"
 	else
-		echo "Please define BASE_DIR environment"
+		echo "Please define BASE_DIR environment" >&2
 		exit 1
 	fi
 fi
@@ -18,20 +18,25 @@ LOGFILE="$BASE_DIR/build.log"
 LOGFILE_HTML="$BASE_DIR/build.html"
 VERDICTFILE="$BASE_DIR/build.verdict"
 
-REPO_URL="git@github.com:$REPO.git"
-
 if [ "$#" -lt 2 ]; then
-	echo "USAGE: $0 remote commit [merge-into]"
+	echo "USAGE: $0 head_repo head_commit [base_repo base_commit]" >&2
 	exit 1
 fi
 
-REMOTE="$1"
-COMMIT="$2"
-MERGE_INTO="$3"
+HEAD_REPO="$1"
+HEAD_COMMIT="$2"
+
+BASE_REPO="$3"
+BASE_COMMIT="$4"
 
 if [ ! -d "$BUILDDIR" ]; then
+	if [ ! "$BASE_REPO" ]; then
+		echo "Please set base_repo to clone repository for the first time." >&2
+		exit 1
+	fi
+
 	echo "**** cloning repository for the first time"
-	git clone "$REPO_URL" "$BUILDDIR"
+	git clone "$BASE_REPO" "$BUILDDIR"
 fi
 
 GIT="git --git-dir $BUILDDIR/.git --work-tree $BUILDDIR"
@@ -41,24 +46,25 @@ echo "**** building in $BUILDDIR"
 rm -f "$VERDICTFILE"
 
 set +e
-$GIT remote rm src
+$GIT remote rm headremote
+$GIT remote rm baseremote
 set -e
 
-$GIT remote add src "$REMOTE"
-$GIT fetch src
-$GIT fetch origin
+$GIT remote add headremote "$HEAD_REPO"
+$GIT remote add baseremote "$BASE_REPO"
+$GIT fetch headremote
+$GIT fetch baseremote
 
-if [ "$MERGE_INTO" ]; then
-	$GIT checkout "$MERGE_INTO"
-
-	set +e
-	$GIT branch -D ci
-	set -e
-
-	$GIT checkout -b ci "$MERGE_INTO"
-	$GIT merge --no-edit "$COMMIT"
+if [ "$BASE_COMMIT" ]; then
+	$GIT checkout -f -B ci "$BASE_COMMIT"
+	if ! $GIT merge --no-edit "$HEAD_COMMIT"; then
+		touch "$LOGFILE"
+		touch "$LOGFILE_HTML"
+		echo "failed-merge" > "$VERDICTFILE"
+		exit 0
+	fi
 else
-	$GIT checkout "$COMMIT"
+	$GIT checkout -f -B ci "$HEAD_COMMIT"
 fi
 
 $GIT clean -xdf
