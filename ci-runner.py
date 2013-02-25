@@ -84,8 +84,10 @@ def run():
 		head_commit = "headremote/" + pull.head.ref
 
 		base_repo = url_to_repo(pull.base.repo.clone_url)
-		base_sha = pull.base.sha
+		base_sha = pull.base.repo.get_branch(pull.base.ref).commit.sha
 		base_commit = "baseremote/" + pull.base.ref
+
+		logging.debug("%d: head is %s, base is %s" % (pulln, head_sha, base_sha))
 
 		if already_done(head_commitobj, base_sha):
 			logging.info("%d: already annotated, skipping" % (pulln,))
