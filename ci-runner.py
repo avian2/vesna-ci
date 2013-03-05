@@ -65,9 +65,6 @@ def run_pullreq(pulln, head_repo, head_commit, head_sha, base_repo, base_commit,
 	return state, description
 
 def run():
-	logging.info("BASE_DIR = %s" % (BASE_DIR,))
-	logging.info("Starting run at %s" % (datetime.datetime.now(),))
-
 	token_path = os.path.join(BASE_DIR, "ci-runner.token")
 	token = open(token_path).read().strip()
 	gh = Github(token)
@@ -107,10 +104,21 @@ def run():
 
 		head_commitobj.create_status(state, target_url, description)
 
-	logging.info("Ending run at %s" % (datetime.datetime.now(),))
-
 def main():
 	setup()
-	run()
+
+	logging.info("BASE_DIR = %s" % (BASE_DIR,))
+	logging.info("Starting run at %s" % (datetime.datetime.now(),))
+
+	lock_path = os.path.join(BASE_DIR, "ci-runner.lock")
+	try:
+		os.mkdir(lock_path)
+	except OSError:
+		logging.info("Lock present. Exiting.")
+	else:
+		run()
+		os.rmdir(lock_path)
+
+	logging.info("Ending run at %s" % (datetime.datetime.now(),))
 
 main()
