@@ -107,8 +107,8 @@ def run():
 def main():
 	setup()
 
-	logging.info("BASE_DIR = %s" % (BASE_DIR,))
 	logging.info("Starting run at %s" % (datetime.datetime.now(),))
+	logging.info("BASE_DIR = %s" % (BASE_DIR,))
 
 	lock_path = os.path.join(BASE_DIR, "ci-runner.lock")
 	try:
