@@ -116,7 +116,11 @@ def main():
 	except OSError:
 		logging.info("Lock present. Exiting.")
 	else:
-		run()
+		try:
+			run()
+		except:
+			logging.exception("unhandled exception during run")
+
 		os.rmdir(lock_path)
 
 	logging.info("Ending run at %s" % (datetime.datetime.now(),))
