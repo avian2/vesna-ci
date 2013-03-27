@@ -51,11 +51,12 @@ $GIT remote rm baseremote
 set -e
 
 $GIT remote add headremote "$HEAD_REPO"
-$GIT remote add baseremote "$BASE_REPO"
 $GIT fetch headremote
-$GIT fetch baseremote
 
 if [ "$BASE_COMMIT" ]; then
+	$GIT remote add baseremote "$BASE_REPO"
+	$GIT fetch baseremote
+
 	$GIT checkout -f -B ci "$BASE_COMMIT"
 	if ! $GIT merge --no-edit "$HEAD_COMMIT"; then
 		touch "$LOGFILE"
