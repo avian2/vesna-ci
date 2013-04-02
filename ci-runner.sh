@@ -63,6 +63,8 @@ set -e
 $GIT remote add headremote "$HEAD_REPO"
 $GIT fetch headremote
 
+$GIT clean -xdf
+
 if [ "$BASE_COMMIT" ]; then
 	$GIT remote add baseremote "$BASE_REPO"
 	$GIT fetch baseremote
@@ -78,7 +80,6 @@ else
 	$GIT checkout -f -B ci "$HEAD_COMMIT"
 fi
 
-$GIT clean -xdf
 rm -f "$LOGFILE"
 VERDICT="success"
 MESSAGE="Build successful"
