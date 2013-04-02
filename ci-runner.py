@@ -6,13 +6,6 @@ import subprocess
 from settings import *
 import os
 
-FAILURE_DESCRIPTIONS = {
-	"failed-merge": "Branch cannot be automatically merged",
-	"failed-compile": "Compiler emitted warnings or non-fatal errors.",
-	"failed-make": "There were fatal compiler errors.",
-	"failed-tests": "Code did not pass unit tests.",
-}
-
 def url_to_repo(url):
 	return url.replace("https://github.com/", "git@github.com:")
 
@@ -43,25 +36,16 @@ def run_pullreq(pulln, head_repo, head_commit, head_sha, base_repo, base_commit,
 		logging.info("%d: ci-runner.sh 2: %s" % (pulln, line))
 
 	if p.returncode == 0:
-		status = open(os.path.join(BASE_DIR, "build.verdict")).read().strip()
+		verdict = open(os.path.join(BASE_DIR, "build.verdict")).read().strip()
 	else:
 		logging.warning("%d: ci-runner.sh exited with %d" % (pulln, p.returncode))
-		status = "failed-ci"
+		verdict = "error: CI system failed"
 
 	for e in ["log", "html", "verdict"]:
 		os.rename(os.path.join(BASE_DIR, "build.%s" % (e,)),
 				os.path.join(BASE_DIR, "logs/build.%s.%s.%s" % (head_sha, base_sha, e)))
 
-	if status == 'ok':
-		state = 'success'
-		description = 'Build successful'
-	elif status == 'failed-ci':
-		state = 'error'
-		description = 'CI system failed'
-	else:
-		state = 'failure'
-		description = FAILURE_DESCRIPTIONS.get(status ,'Build failed: %s' % status)
-
+	state, description = verdict.split(": ")
 	return state, description
 
 def run():

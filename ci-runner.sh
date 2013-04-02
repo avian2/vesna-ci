@@ -1,5 +1,12 @@
 #!/bin/bash
 
+function get_description {
+	TEST="$1"
+	CODE="$2"
+
+	sed -ne "/^# -- $CODE: /{s/^.*: //;p}" "$TEST"
+}
+
 set -e
 
 if [ ! "$BASE_DIR" ]; then
@@ -12,7 +19,10 @@ if [ ! "$BASE_DIR" ]; then
 	fi
 fi
 
+export BASE_DIR
+
 BUILDDIR="$BASE_DIR/build"
+TESTDIR="$BASE_DIR/tests"
 
 LOGFILE="$BASE_DIR/build.log"
 LOGFILE_HTML="$BASE_DIR/build.html"
@@ -61,7 +71,7 @@ if [ "$BASE_COMMIT" ]; then
 	if ! $GIT merge --no-edit "$HEAD_COMMIT"; then
 		touch "$LOGFILE"
 		touch "$LOGFILE_HTML"
-		echo "failed-merge" > "$VERDICTFILE"
+		echo "failure: Branch cannot be automatically merged." > "$VERDICTFILE"
 		exit 0
 	fi
 else
@@ -69,40 +79,43 @@ else
 fi
 
 $GIT clean -xdf
+rm -f "$LOGFILE"
+VERDICT="success"
+MESSAGE="Build successful"
 
-NETWORKCONF_PATH="$BUILDDIR/Applications/Logatec/Clusters/local_usart_networkconf.h"
-if [ -e "$NETWORKCONF_PATH" ]; then
-	cp "$NETWORKCONF_PATH" $BUILDDIR/Applications/Logatec/networkconf.h
-fi
+for TEST in "$TESTDIR"/*.sh; do
+	echo "Starting $TEST..." > "$LOGFILE.part"
 
-set +e
-#echo test > "$LOGFILE"
-make -C "$BUILDDIR" > "$LOGFILE" 2>&1
-RESULT="$?"
-set -e
+	TEST=`realpath "$TEST"`
 
-if [ "$RESULT" -eq 0 ]; then
-	if egrep -f "$BASE_DIR/fail_patterns" "$LOGFILE" > /dev/null; then
-		VERDICT="failed-compile"
-	else
-		if [ -e "$BUILDDIR/test/Makefile" ]; then
-			set +e
-			make -C "$BUILDDIR/test" test >> "$LOGFILE" 2>&1
-			RESULT="$?"
-			set -e
-			if [ "$RESULT" -eq 0 ]; then
-				VERDICT="ok"
-			else
-				VERDICT="failed-tests"
-			fi
-		else
-			VERDICT="ok"
+	set +e
+	(cd "$BUILDDIR" && "$TEST") >> "$LOGFILE.part" 2>&1
+	RESULT="$?"
+	set -e
+
+	if [ "$RESULT" -ne 0 ]; then
+		VERDICT="failure"
+		MESSAGE=`get_description "$TEST" "$RESULT"`
+	fi
+
+	PATTERNS=`dirname "$TEST"`/`basename "$TEST" .sh`.patterns
+
+	if [ "$VERDICT" = "success" -a -e "$PATTERNS" ]; then
+		if egrep -f "$PATTERNS" "$LOGFILE.part" > /dev/null; then
+			VERDICT="failure"
+			MESSAGE=`get_description "$TEST" patterns`
 		fi
 	fi
-else
-	VERDICT="failed-make"
-fi
+
+	cat "$LOGFILE.part" >> "$LOGFILE"
+	rm "$LOGFILE.part"
+
+	if [ "$VERDICT" != "success" ]; then
+		break
+	fi
+
+done
 
 CGCC_FORCE_COLOR=1 colorgcc "$LOGFILE" | aha > "$LOGFILE_HTML"
 
-echo "$VERDICT" > "$VERDICTFILE"
+echo "$VERDICT: $MESSAGE" > "$VERDICTFILE"
