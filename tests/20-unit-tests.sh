@@ -4,6 +4,10 @@
 #
 # -- 2: Code did not pass unit tests.
 
-[ -e "test/Makefile" ] || exit 0
-
-make -C "test" test
+if [ -e "test/Makefile" ]; then
+	make -C "test" test
+elif [ -e "Tests/host" ]; then
+	make -C "Tests/host" test
+else
+	exit 0
+fi
