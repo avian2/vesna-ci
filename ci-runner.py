@@ -9,13 +9,13 @@ import os
 def url_to_repo(url):
 	return url.replace("https://github.com/", "git@github.com:")
 
-def already_done(head_commitobj, base_sha):
+def already_done(commitobj, base_sha):
 	
 	def is_current(status):
 		their_base_sha = status.target_url.split('.')[-2]
 		return status.state != 'error' and their_base_sha == base_sha
 
-	return any(is_current(status) for status in head_commitobj.get_statuses())
+	return any(is_current(status) for status in commitobj.get_statuses())
 
 def setup():
 	log_path = os.path.join(BASE_DIR, "logs/ci-runner.log")
@@ -61,16 +61,16 @@ def run():
 
 		head_repo = url_to_repo(pull.head.repo.clone_url)
 		head_sha = pull.head.sha
-		head_commitobj = pull.head.repo.get_commit(head_sha)
 		head_commit = "headremote/" + pull.head.ref
 
 		base_repo = url_to_repo(pull.base.repo.clone_url)
 		base_sha = pull.base.repo.get_branch(pull.base.ref).commit.sha
+		base_commitobj = pull.base.repo.get_commit(head_sha)
 		base_commit = "baseremote/" + pull.base.ref
 
 		logging.debug("%d: head is %s, base is %s" % (pulln, head_sha, base_sha))
 
-		if already_done(head_commitobj, base_sha):
+		if already_done(base_commitobj, base_sha):
 			logging.info("%d: already annotated, skipping" % (pulln,))
 			continue
 		else:
@@ -86,7 +86,7 @@ def run():
 		logging.info("%d: description  : %s" % (pulln, description))
 		logging.info("%d: target url   : %s" % (pulln, target_url))
 
-		head_commitobj.create_status(state, target_url, description)
+		base_commitobj.create_status(state, target_url, description)
 
 def main():
 	setup()
