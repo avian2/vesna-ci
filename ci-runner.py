@@ -5,6 +5,9 @@ import logging
 import subprocess
 from settings import *
 import os
+from optparse import OptionParser
+
+options = None
 
 def url_to_repo(url):
 	return url.replace("https://github.com/", "git@github.com:")
@@ -20,6 +23,16 @@ def already_done(commitobj, base_sha):
 def setup():
 	log_path = os.path.join(BASE_DIR, "logs/ci-runner.log")
 	logging.basicConfig(filename=log_path, level=logging.INFO)
+
+	parser = OptionParser(usage="%prog [options]")
+
+	parser.add_option("-f", "--force", dest="force", action="store_true",
+			help="Force test, even if commit status already up-to-date")
+	parser.add_option("-n", "--dry-run", dest="dryrun", action="store_true",
+			help="Don't push anything to GitHub")
+
+	global options
+	(options, args) = parser.parse_args()
 
 def run_pullreq(pulln, head_repo, head_commit, head_sha, base_repo, base_commit, base_sha):
 	env = dict(os.environ)
@@ -71,8 +84,11 @@ def run():
 		logging.debug("%d: head is %s, base is %s" % (pulln, head_sha, base_sha))
 
 		if already_done(base_commitobj, base_sha):
-			logging.info("%d: already annotated, skipping" % (pulln,))
-			continue
+			if options.force:
+				logging.info("%d: already annotated, but forcing re-test" % (pulln,))
+			else:
+				logging.info("%d: already annotated, skipping" % (pulln,))
+				continue
 		else:
 			logging.info("%d: needs test" % (pulln,))
 
@@ -86,7 +102,8 @@ def run():
 		logging.info("%d: description  : %s" % (pulln, description))
 		logging.info("%d: target url   : %s" % (pulln, target_url))
 
-		base_commitobj.create_status(state, target_url, description)
+		if not options.dryrun:
+			base_commitobj.create_status(state, target_url, description)
 
 def main():
 	setup()
